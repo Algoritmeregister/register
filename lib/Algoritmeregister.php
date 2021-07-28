@@ -77,17 +77,19 @@ class Algoritmeregister
         return $this->_loadToepassing($id);
     }
 
-    public function updateToepassing($id, $values)
+    public function updateToepassing($id, $values, $token)
     {
         $toepassing = $this->_loadToepassing($id);
-        $changes = [];
-        foreach ($values as $key => $value) {
-            if ($toepassing[$key]["waarde"] !== $value) {
-                $changes[$key]["waarde"] = $value;
+        if (password_verify($token, $toepassing["hash"]["waarde"])) {
+            $changes = [];
+            foreach ($values as $key => $value) {
+                if ($toepassing[$key]["waarde"] !== $value) {
+                    $changes[$key]["waarde"] = $value;
+                }
+                $toepassing[$key]["waarde"] = $value;
             }
-            $toepassing[$key]["waarde"] = $value;
+            $this->_storeToepassing($id, $changes, "update"); // optimization: only store changed values
         }
-        $this->_storeToepassing($id, $changes, "update"); // optimization: only store changed values
         return $toepassing;
     }
 

@@ -107,7 +107,8 @@ $app->post('/toepassingen', function (Request $request, Response $response, $arg
 });
 
 $app->put('/toepassingen/{id}', function (Request $request, Response $response, $args) use ($algoritmeregister) {
-    $toepassing = $algoritmeregister->updateToepassing($args['id'], $request->getParsedBody());
+    $token = $request->getQueryParams()["token"];
+    $toepassing = $algoritmeregister->updateToepassing($args['id'], $request->getParsedBody(), $token);
     $toepassing["_links"] = [
         "self" => [
             "href" => "/toepassingen/{$toepassing["uuid"]}"
