@@ -6,8 +6,8 @@ https://github.com/Algoritmeregister/algoritmeregister-prototype
 
 1. git clone XXX
 2. composer install
-3. cp storage/index.csv.dist storage/index.csv
-4. chown www-data:www-data storage/index.csv
+3. cp storage/events.csv.dist storage/events.csv
+4. chown www-data:www-data storage/events.csv
 
 ## Lokaal draaien
 
