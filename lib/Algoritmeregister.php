@@ -11,7 +11,7 @@ class Algoritmeregister
     {
         $chars = "ABCDEF0123456789";
         $token = "";
-        while (strlen($this->_token) < 20) {
+        while (strlen($token) < 20) {
             $token .= $chars[mt_rand(0, strlen($chars) - 1)];
         }
         return $token;
@@ -65,7 +65,10 @@ class Algoritmeregister
         $toepassing["herziening"]["waarde"] = $data["herziening"];
         $toepassing["id"]["waarde"] = $this->_getUuid();
         $toepassing["uri"]["waarde"] = "{$uri}/{$toepassing["id"]["waarde"]}";
+        $token = $this->_createToken();
+        $toepassing["hash"]["waarde"] = password_hash($token, PASSWORD_DEFAULT);
         $this->_storeToepassing($toepassing["id"]["waarde"], $toepassing, "create");
+        $toepassing["token"]["waarde"] = $token; // return once but do not store
         return $toepassing;
     }
 

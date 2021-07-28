@@ -90,8 +90,7 @@ $app->get('/toepassingen/{id}', function (Request $request, Response $response, 
 });
 
 $app->post('/toepassingen', function (Request $request, Response $response, $args) use ($algoritmeregister) {
-    $data = $request->getParsedBody();
-    $toepassing = $algoritmeregister->createToepassing($data, $request->getUri());
+    $toepassing = $algoritmeregister->createToepassing($request->getParsedBody(), $request->getUri());
     $toepassing["_links"] = [
         "self" => [
             "href" => "/toepassingen/{$toepassing["uuid"]["waarde"]}"
@@ -108,8 +107,7 @@ $app->post('/toepassingen', function (Request $request, Response $response, $arg
 });
 
 $app->put('/toepassingen/{id}', function (Request $request, Response $response, $args) use ($algoritmeregister) {
-    $data = $request->getParsedBody();
-    $toepassing = $algoritmeregister->updateToepassing($args['id'], $data);
+    $toepassing = $algoritmeregister->updateToepassing($args['id'], $request->getParsedBody());
     $toepassing["_links"] = [
         "self" => [
             "href" => "/toepassingen/{$toepassing["uuid"]}"
