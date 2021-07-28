@@ -39,14 +39,18 @@ class Algoritmeregister
     public function listToepassingen()
     {
         $toepassingen = [];
-        if (($fp = fopen($this->_storageDir . "index.csv", "r")) !== FALSE) {
+        if (($fp = fopen($this->_storageDir . "events.csv", "r")) !== FALSE) {
             $keys = fgetcsv($fp, 1000, ',');
             while (($values = fgetcsv($fp, 1000, ',')) !== false) {
-                $toepassingen[] = array_combine($keys, $values);
+                $event = array_combine($keys, $values);
+                $basics = ["id", "naam", "organisatie", "afdeling", "herziening", "status", "type", "contact", "uri"];
+                if (in_array($event["field"], $basics) && $event["attribute"] === "waarde") {
+                    $toepassingen[$event["id"]][$event["field"]] = $event["value"];
+                }
             }
             fclose($fp);
         }
-        return $toepassingen;
+        return array_values($toepassingen);
     }
 
     public function createToepassing($data, $uri)
@@ -59,19 +63,9 @@ class Algoritmeregister
         $toepassing["type"]["waarde"] = $data["type"];
         $toepassing["status"]["waarde"] = $data["status"];
         $toepassing["herziening"]["waarde"] = $data["herziening"];
-        $toepassing["uuid"]["waarde"] = $this->_getUuid();
-        $this->_storeToepassing($toepassing["uuid"]["waarde"], $toepassing);
-
-        // FIXME remove later
-        $organisatie = $data["organisatie"];
-        $afdeling = $data["afdeling"];
-        $naam = $data["naam"];
-        $contact = $data["contact"];
-        $type = $data["type"];
-        $status = $data["status"];
-        $herziening = $data["herziening"];
-        $this->_storeIndex($toepassing["uuid"]["waarde"], $organisatie, $afdeling, $naam, $type, $status, $herziening, $contact, $hash, "{$uri}/{$toepassing["uuid"]["waarde"]}");
-
+        $toepassing["id"]["waarde"] = $this->_getUuid();
+        $toepassing["uri"]["waarde"] = "{$uri}/{$toepassing["id"]["waarde"]}";
+        $this->_storeToepassing($toepassing["id"]["waarde"], $toepassing, "create");
         return $toepassing;
     }
 
@@ -82,32 +76,47 @@ class Algoritmeregister
 
     public function updateToepassing($id, $values)
     {
-        //file_put_contents(__DIR__ . "/../storage/log.txt", print_r($values, true).PHP_EOL, FILE_APPEND);
         $toepassing = $this->_loadToepassing($id);
+        $changes = [];
         foreach ($values as $key => $value) {
+            if ($toepassing[$key]["waarde"] !== $value) {
+                $changes[$key]["waarde"] = $value;
+            }
             $toepassing[$key]["waarde"] = $value;
         }
-        $this->_storeToepassing($id, $toepassing);
+        $this->_storeToepassing($id, $changes, "update"); // optimization: only store changed values
         return $toepassing;
     }
 
     private function _loadToepassing($id = NULL)
     {
-        return !$id ?
-            $this->_transformToIndexed(json_decode(file_get_contents("https://algoritmeregister.github.io/algoritmeregister-metadata-standaard/algoritmeregister-metadata-standaard.json"), true)) :
-            json_decode(file_get_contents(__DIR__ . "/../storage/{$id}." . md5($id) . ".json"), true);
+        if (!$id) {
+            return $this->_transformToIndexed(json_decode(file_get_contents("https://algoritmeregister.github.io/algoritmeregister-metadata-standaard/algoritmeregister-metadata-standaard.json"), true));
+        }
+        $toepassing = [];
+        if (($fp = fopen($this->_storageDir . "events.csv", "r")) !== FALSE) {
+            $keys = fgetcsv($fp, 1000, ',');
+            while (($values = fgetcsv($fp, 1000, ',')) !== false) {
+                $event = array_combine($keys, $values);
+                if ($event["id"] !== $id) {
+                    continue;
+                }
+                $toepassing[$event["field"]][$event["attribute"]] = $event["value"]; // FIXME use event action
+            }
+            fclose($fp);
+        }
+        return $toepassing;
+        
     }
 
-    private function _storeToepassing($id, $toepassing)
+    private function _storeToepassing($id, $toepassing, $action)
     {
-        file_put_contents(__DIR__ . "/../storage/{$id}." . md5($id) . ".json", json_encode($toepassing));
+        $timestamp = date("Y-m-d H:i:s");
+        foreach ($toepassing as $field => $attributes) {
+            foreach ($attributes as $attribute => $value) {
+                $txt = "\"{$id}\",\"{$action}\",\"{$field}\",\"{$attribute}\",\"{$value}\",\"{$timestamp}\"";
+                file_put_contents($this->_storageDir . "events.csv", $txt.PHP_EOL, FILE_APPEND);
+            }
+        }
     }
-
-    private function _storeIndex($uuid, $organisatie, $afdeling, $naam, $type, $status, $herziening, $contact, $hash, $uri)
-    {
-        // FIXME remove later
-        $txt = "\"{$uuid}\",\"{$organisatie}\",\"{$afdeling}\",\"{$naam}\",\"{$type}\",\"{$status}\",\"{$herziening}\",\"{$contact}\",\"{$hash}\",\"{$uri}\"";
-        $myfile = file_put_contents($this->_storageDir . "index.csv", $txt.PHP_EOL, FILE_APPEND);
-    }
-
 }
