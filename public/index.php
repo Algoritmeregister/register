@@ -81,6 +81,10 @@ $app->get('/toepassingen/{id}', function (Request $request, Response $response, 
         "toepassingen" => [
             "href" => "/toepassingen",
             "title" => "Alle toepassingen in dit algoritmeregister"
+        ],
+        "events" => [
+            "href" => "/events/{$id}",
+            "title" => "Alle events voor toepassing {$toepassing["naam"]["waarde"]}"
         ]
     ];
     $response->getBody()->write(json_encode(
@@ -127,6 +131,32 @@ $app->put('/toepassingen/{id}', function (Request $request, Response $response, 
 $app->delete('/toepassingen/{id}', function (Request $request, Response $response, $args) use ($algoritmeregister) {
     $algoritmeregister->deleteToepassing($args['id']);
     return $response->withStatus('204');
+});
+
+$app->get('/events/{id}', function (Request $request, Response $response, $args) use ($algoritmeregister) {
+    $id = $args['id'];
+    $events = $algoritmeregister->listEvents($id);
+    $response->getBody()->write(json_encode([
+        "_links" => [
+            "self" => [
+                "href" => "/toepassingen",
+                "title" => "Alle toepassingen in dit algoritmeregister"
+            ],
+            "home" => [
+                "href" => "/",
+                "title" => "Algoritmeregister home"
+            ],
+            "toepassing" => [
+                "href" => "/toepassingen/{$id}",
+                "title" => "Detailpagina voor toepassing {$id}"
+            ]
+        ],
+        "count" => count($events),
+        "_embedded" => [
+            "events" => $events
+        ]
+    ]));
+    return $response->withHeader('Content-Type', 'application/hal+json');
 });
 
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function ($request, $response) {

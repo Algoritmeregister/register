@@ -53,6 +53,22 @@ class Algoritmeregister
         return array_values($toepassingen);
     }
 
+    public function listEvents($id)
+    {
+        $events = [];
+        if (($fp = fopen($this->_storageDir . "events.csv", "r")) !== FALSE) {
+            $keys = fgetcsv($fp, 1000, ',');
+            while (($values = fgetcsv($fp, 1000, ',')) !== false) {
+                $event = array_combine($keys, $values);
+                if ($event["id"] === $id) {
+                    $events[] = $event;
+                }
+            }
+            fclose($fp);
+        }
+        return $events;
+    }
+
     public function createToepassing($data, $uri)
     {
         $toepassing = $this->_loadToepassing();
