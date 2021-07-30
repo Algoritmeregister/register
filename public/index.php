@@ -5,12 +5,13 @@ use Slim\Factory\AppFactory;
 use Tiltshift\Algoritmeregister\Algoritmeregister;
 
 require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../private/config.php';
 
 $app = AppFactory::create();
 
 $app->addBodyParsingMiddleware(); // needed for PUT payload
 
-$algoritmeregister = new Algoritmeregister(__DIR__ . "/../storage/"); // FIXME config
+$algoritmeregister = new Algoritmeregister($config["storage-directory"], $config["known-maildomains"]);
 
 $app->options('/{routes:.+}', function ($request, $response, $args) {
     return $response;

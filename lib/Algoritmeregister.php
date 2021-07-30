@@ -6,6 +6,7 @@ class Algoritmeregister
 {
 
     private $_storageDir;
+    private $_knownMaildomains;
 
     private function _createToken()
     {
@@ -31,9 +32,10 @@ class Algoritmeregister
         return $indexed;
     }
 
-    public function __construct($storageDir)
+    public function __construct($storageDir, $knownMaildomains)
     {
         $this->_storageDir = $storageDir;
+        $this->_knownMaildomains = $knownMaildomains;
     }
 
     public function listToepassingen()
@@ -71,6 +73,11 @@ class Algoritmeregister
 
     public function createToepassing($data, $uri)
     {
+        $contact = $data["contact"];
+        $maildomain = array_pop(explode('@', $contact));
+        if (!in_array($maildomain, $this->_knownMaildomains)) {
+            return $response->withStatus(403);
+        }
         $toepassing = $this->_loadToepassing();
         $toepassing["naam"]["waarde"] = $data["naam"];
         $toepassing["organisatie"]["waarde"] = $data["organisatie"];

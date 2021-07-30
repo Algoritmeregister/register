@@ -1,0 +1,8 @@
+<?php
+
+$config = [
+    'storage-directory' => '',
+    'known-maildomains' => [
+        'maildomain.extension'
+    ]
+];
