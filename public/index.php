@@ -26,6 +26,12 @@ $app->add(function ($request, $handler) {
             ->withHeader('Access-Control-Allow-Credentials', 'true');
 });
 
+$app->get('/rels/{rel}', function (Request $request, Response $response, $args) {
+    // Load doc for rel (maybe swagger doc?)
+    // twig documentation
+    return $response;
+});
+
 $app->get('/', function (Request $request, Response $response, $args) {
     $response->getBody()->write(json_encode([
         "_links" => [
@@ -33,7 +39,14 @@ $app->get('/', function (Request $request, Response $response, $args) {
                 "href" => "/",
                 "title" => "Algoritmeregister home"
             ],
-            "toepassingen" => [
+            "curries" => [
+                [
+                    "name" => "algoreg",
+                    "href" => "{$request->getUri()}rels/{rel}",
+                    "templated" => true
+                ]
+            ],
+            "algoreg:toepassingen" => [
                 "href" => "/toepassingen",
                 "title" => "Alle toepassingen in dit algoritmeregister"
             ]
