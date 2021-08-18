@@ -85,6 +85,7 @@ class Algoritmeregister
         $toepassing["naam"]["waarde"] = $data["naam"];
         $toepassing["organisatie"]["waarde"] = $data["organisatie"];
         $toepassing["afdeling"]["waarde"] = $data["afdeling"];
+        $toepassing["categorie"]["waarde"] = $data["categorie"];
         $toepassing["contact"]["waarde"] = $data["contact"];
         $toepassing["type"]["waarde"] = $data["type"];
         $toepassing["status"]["waarde"] = $data["status"];
