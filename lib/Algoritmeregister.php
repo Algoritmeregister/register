@@ -45,7 +45,7 @@ class Algoritmeregister
             $keys = fgetcsv($fp, 1000, ',');
             while (($values = fgetcsv($fp, 1000, ',')) !== false) {
                 $event = array_combine($keys, $values);
-                $basics = ["id", "naam", "organisatie", "afdeling", "herziening", "status", "type", "contact", "uri"];
+                $basics = ["id", "naam", "organisatie", "afdeling", "herziening", "status", "type", "categorie", "contact", "uri"];
                 if (in_array($event["field"], $basics) && $event["attribute"] === "waarde") {
                     $toepassingen[$event["id"]][$event["field"]] = $event["value"];
                 }
