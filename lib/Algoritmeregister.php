@@ -49,6 +49,9 @@ class Algoritmeregister
                 if (in_array($event["field"], $basics) && $event["attribute"] === "waarde") {
                     $toepassingen[$event["id"]][$event["field"]] = $event["value"];
                 }
+                if ($event["action"] === "delete") {
+                    unset($toepassingen[$event["id"]]);
+                }
             }
             fclose($fp);
         }
@@ -116,6 +119,14 @@ class Algoritmeregister
         return $toepassing;
     }
 
+    public function deleteToepassing($id, $token)
+    {
+        $toepassing = $this->_loadToepassing($id);
+        if (password_verify($token, $toepassing["hash"]["waarde"])) {
+            $this->_deleteToepassing($id);
+        }
+    }
+
     private function _loadToepassing($id = NULL)
     {
         if (!$id) {
@@ -129,7 +140,10 @@ class Algoritmeregister
                 if ($event["id"] !== $id) {
                     continue;
                 }
-                $toepassing[$event["field"]][$event["attribute"]] = $event["value"]; // FIXME use event action
+                if ($event["action"] === "delete") {
+                    return null;
+                }
+                $toepassing[$event["field"]][$event["attribute"]] = $event["value"];
             }
             fclose($fp);
         }
@@ -146,5 +160,12 @@ class Algoritmeregister
                 file_put_contents($this->_storageDir . "events.csv", $txt.PHP_EOL, FILE_APPEND);
             }
         }
+    }
+
+    private function _deleteToepassing($id)
+    {
+        $timestamp = date("Y-m-d H:i:s");
+        $txt = "\"{$id}\",\"delete\", , , ,\"{$timestamp}\"";
+        file_put_contents($this->_storageDir . "events.csv", $txt.PHP_EOL, FILE_APPEND);
     }
 }

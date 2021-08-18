@@ -195,7 +195,8 @@ $app->put('/toepassingen/{id}', function (Request $request, Response $response, 
 });
 
 $app->delete('/toepassingen/{id}', function (Request $request, Response $response, $args) use ($algoritmeregister) {
-    $algoritmeregister->deleteToepassing($args['id']);
+    $token = $request->getQueryParams()["token"];
+    $algoritmeregister->deleteToepassing($args['id'], $token);
     return $response->withStatus('204');
 });
 
