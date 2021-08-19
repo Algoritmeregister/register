@@ -3,6 +3,8 @@
 $config = [
     'storage-directory' => '',
     'known-maildomains' => [
-        'maildomain.extension'
-    ]
+        'Organization Name' => 'maildomain.extension'
+    ],
+    'uuid-service-url' => '',
+    'metadata-standard-url' => ''
 ];

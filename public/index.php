@@ -28,7 +28,12 @@ $app->add(TwigMiddleware::create($app, $twig));
 
 $app->addBodyParsingMiddleware(); // needed for PUT payload
 
-$algoritmeregister = new Algoritmeregister($config["storage-directory"], $config["known-maildomains"]);
+$algoritmeregister = new Algoritmeregister(
+    $config["storage-directory"],
+    $config["known-maildomains"],
+    $config["uuid-service-url"],
+    $config["metadata-standard-url"]
+);
 
 $app->options('/{routes:.+}', function ($request, $response, $args) {
     return $response;

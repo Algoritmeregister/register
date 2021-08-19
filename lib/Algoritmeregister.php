@@ -7,6 +7,8 @@ class Algoritmeregister
 
     private $_storageDir;
     private $_knownMaildomains;
+    private $_uuidServiceUrl;
+    private $_metadataStandardUrl;
 
     private function _createToken()
     {
@@ -20,7 +22,7 @@ class Algoritmeregister
 
     private function _getUuid()
     {
-        return json_decode(file_get_contents("https://www.uuidtools.com/api/generate/v1"))[0];
+        return json_decode(file_get_contents($this->_uuidServiceUrl))[0];
     }
 
     private function _transformToIndexed($metadata)
@@ -32,10 +34,12 @@ class Algoritmeregister
         return $indexed;
     }
 
-    public function __construct($storageDir, $knownMaildomains)
+    public function __construct($storageDir, $knownMaildomains, $uuidServiceUrl, $metadataStandardUrl)
     {
         $this->_storageDir = $storageDir;
         $this->_knownMaildomains = $knownMaildomains;
+        $this->_uuidServiceUrl = $uuidServiceUrl;
+        $this->_metadataStandardUrl = $metadataStandardUrl;
     }
 
     public function listToepassingen()
@@ -131,7 +135,7 @@ class Algoritmeregister
     private function _loadToepassing($id = NULL)
     {
         if (!$id) {
-            return $this->_transformToIndexed(json_decode(file_get_contents("https://algoritmeregister.github.io/algoritmeregister-metadata-standaard/algoritmeregister-metadata-standaard.json"), true));
+            return $this->_transformToIndexed(json_decode(file_get_contents($this->_metadataStandardUrl), true));
         }
         $toepassing = [];
         if (($fp = fopen($this->_storageDir . "events.csv", "r")) !== FALSE) {
