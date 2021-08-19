@@ -5,6 +5,6 @@ $config = [
     'known-maildomains' => [
         'Organization Name' => 'maildomain.extension'
     ],
-    'uuid-service-url' => '',
-    'metadata-standard-url' => ''
+    'uuid-service-url' => "https://www.uuidtools.com/api/generate/v1",
+    'metadata-standard-url' => "https://algoritmeregister.github.io/algoritmeregister-metadata-standaard/algoritmeregister-metadata-standaard.json"
 ];
