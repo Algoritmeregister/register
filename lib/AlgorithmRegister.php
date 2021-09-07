@@ -1,8 +1,8 @@
 <?php
 
-namespace Tiltshift\Algoritmeregister;
+namespace AlgorithmRegister;
 
-class Algoritmeregister
+class AlgorithmRegister
 {
 
     private $_storageDir;
@@ -29,7 +29,7 @@ class Algoritmeregister
     {
         $indexed = [];
         foreach ($metadata as $field) {
-            $indexed[$field["eigenschap"]] = $field;
+            $indexed[$field["property"]] = $field;
         }
         return $indexed;
     }
@@ -42,24 +42,25 @@ class Algoritmeregister
         $this->_metadataStandardUrl = $metadataStandardUrl;
     }
 
-    public function listToepassingen()
+    public function listApplications()
     {
-        $toepassingen = [];
+        $applications = [];
         if (($fp = fopen($this->_storageDir . "events.csv", "r")) !== FALSE) {
             $keys = fgetcsv($fp, 1000, ',');
             while (($values = fgetcsv($fp, 1000, ',')) !== false) {
                 $event = array_combine($keys, $values);
-                $basics = ["id", "naam", "organisatie", "afdeling", "herziening", "status", "type", "categorie", "contact", "uri"];
-                if (in_array($event["field"], $basics) && $event["attribute"] === "waarde") {
-                    $toepassingen[$event["id"]][$event["field"]] = $event["value"];
+                // FIXME: load from the standard?
+                $basics = ["id", "name", "organization", "department", "revision_date", "staus", "type", "category", "contact_person_email", "uri"];
+                if (in_array($event["field"], $basics) && $event["attribute"] === "value") {
+                    $applications[$event["id"]][$event["field"]] = $event["value"];
                 }
                 if ($event["action"] === "delete") {
-                    unset($toepassingen[$event["id"]]);
+                    unset($applications[$event["id"]]);
                 }
             }
             fclose($fp);
         }
-        return array_values($toepassingen);
+        return array_values($applications);
     }
 
     public function listEvents($id)
@@ -78,66 +79,69 @@ class Algoritmeregister
         return $events;
     }
 
-    public function createToepassing($data, $uri)
+    public function createApplication($data, $uri)
     {
         $contact = $data["contact"];
         $maildomain = array_pop(explode('@', $contact));
         if (!in_array($maildomain, $this->_knownMaildomains)) {
             return $response->withStatus(403);
         }
-        $toepassing = $this->_loadToepassing();
-        $toepassing["naam"]["waarde"] = $data["naam"];
-        $toepassing["organisatie"]["waarde"] = $data["organisatie"];
-        $toepassing["afdeling"]["waarde"] = $data["afdeling"];
-        $toepassing["categorie"]["waarde"] = $data["categorie"];
-        $toepassing["contact"]["waarde"] = $data["contact"];
-        $toepassing["type"]["waarde"] = $data["type"];
-        $toepassing["status"]["waarde"] = $data["status"];
-        $toepassing["herziening"]["waarde"] = $data["herziening"];
-        $toepassing["id"]["waarde"] = $this->_getUuid();
-        $toepassing["uri"]["waarde"] = "{$uri}/{$toepassing["id"]["waarde"]}";
+        $application = $this->_loadApplication();
+        // FIXME load from the standard
+        // FIXME what exactly? required fields? basic fields?
+        $application["naam"]["value"] = $data["naam"];
+        $application["organisatie"]["value"] = $data["organisatie"];
+        $application["afdeling"]["value"] = $data["afdeling"];
+        $application["categorie"]["value"] = $data["categorie"];
+        $application["contact"]["value"] = $data["contact"];
+        $application["type"]["value"] = $data["type"];
+        $application["status"]["value"] = $data["status"];
+        $application["herziening"]["value"] = $data["herziening"];
+        $application["id"]["value"] = $this->_getUuid();
+        $application["uri"]["value"] = "{$uri}/{$application["id"]["value"]}";
         $token = $this->_createToken();
-        $toepassing["hash"]["waarde"] = password_hash($token, PASSWORD_DEFAULT);
-        $this->_storeToepassing($toepassing["id"]["waarde"], $toepassing, "create");
-        $toepassing["token"]["waarde"] = $token; // return once but do not store
-        return $toepassing;
+        $application["hash"]["value"] = password_hash($token, PASSWORD_DEFAULT);
+        $this->_storeApplication($application["id"]["value"], $application, "create");
+        $application["token"]["value"] = $token; // return once but do not store
+        return $application;
     }
 
-    public function readToepassing($id)
+    public function readApplication($id)
     {
-        return $this->_loadToepassing($id);
+        return $this->_loadApplication($id);
     }
 
-    public function updateToepassing($id, $values, $token)
+    public function updateApplication($id, $values, $token)
     {
-        $toepassing = $this->_loadToepassing($id);
-        if (password_verify($token, $toepassing["hash"]["waarde"])) {
+        $application = $this->_loadApplication($id);
+        if (password_verify($token, $application["hash"]["value"])) {
             $changes = [];
             foreach ($values as $key => $value) {
-                if ($toepassing[$key]["waarde"] !== $value) {
-                    $changes[$key]["waarde"] = $value;
+                if ($application[$key]["value"] !== $value) {
+                    $changes[$key]["value"] = $value;
                 }
-                $toepassing[$key]["waarde"] = $value;
+                $application[$key]["value"] = $value;
             }
-            $this->_storeToepassing($id, $changes, "update"); // optimization: only store changed values
+            // optimization: only store changed values
+            $this->_storeApplication($id, $changes, "update");
         }
-        return $toepassing;
+        return $application;
     }
 
-    public function deleteToepassing($id, $token)
+    public function deleteApplication($id, $token)
     {
-        $toepassing = $this->_loadToepassing($id);
-        if (password_verify($token, $toepassing["hash"]["waarde"])) {
-            $this->_deleteToepassing($id);
+        $application = $this->_loadApplication($id);
+        if (password_verify($token, $application["hash"]["value"])) {
+            $this->_deleteApplication($id);
         }
     }
 
-    private function _loadToepassing($id = NULL)
+    private function _loadApplication($id = NULL)
     {
         if (!$id) {
             return $this->_transformToIndexed(json_decode(file_get_contents($this->_metadataStandardUrl), true));
         }
-        $toepassing = [];
+        $application = [];
         if (($fp = fopen($this->_storageDir . "events.csv", "r")) !== FALSE) {
             $keys = fgetcsv($fp, 1000, ',');
             while (($values = fgetcsv($fp, 1000, ',')) !== false) {
@@ -148,18 +152,18 @@ class Algoritmeregister
                 if ($event["action"] === "delete") {
                     return null;
                 }
-                $toepassing[$event["field"]][$event["attribute"]] = $event["value"];
+                $application[$event["field"]][$event["attribute"]] = $event["value"];
             }
             fclose($fp);
         }
-        return $toepassing;
+        return $application;
         
     }
 
-    private function _storeToepassing($id, $toepassing, $action)
+    private function _storeApplication($id, $application, $action)
     {
         $timestamp = date("Y-m-d H:i:s");
-        foreach ($toepassing as $field => $attributes) {
+        foreach ($application as $field => $attributes) {
             foreach ($attributes as $attribute => $value) {
                 $txt = "\"{$id}\",\"{$action}\",\"{$field}\",\"{$attribute}\",\"{$value}\",\"{$timestamp}\"";
                 file_put_contents($this->_storageDir . "events.csv", $txt.PHP_EOL, FILE_APPEND);
@@ -167,7 +171,7 @@ class Algoritmeregister
         }
     }
 
-    private function _deleteToepassing($id)
+    private function _deleteApplication($id)
     {
         $timestamp = date("Y-m-d H:i:s");
         $txt = "\"{$id}\",\"delete\", , , ,\"{$timestamp}\"";

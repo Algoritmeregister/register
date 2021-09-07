@@ -8,6 +8,7 @@ https://github.com/Algoritmeregister/algoritmeregister-prototype
 2. composer install
 3. cp storage/events.csv.dist storage/events.csv
 4. chown www-data:www-data storage/events.csv
+5. set the web server document root to /public, with rewrite engine on
 
 ## Lokaal draaien
 
