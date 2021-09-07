@@ -189,7 +189,7 @@ $app->put('/applications/{id}', function (Request $request, Response $response, 
     $application = $algorithmRegister->updateApplication($args['id'], $request->getParsedBody(), $token);
     $application["_links"] = [
         "self" => [
-            "href" => "{$baseUrl}/applications/{$application["uuid"]}" // FIXME ["value"]?
+            "href" => "{$baseUrl}/applications/{$application["uuid"]}" // FIXME test ["value"]?
         ],
         "schema" => [
             "href" => $application["schema"]["value"],

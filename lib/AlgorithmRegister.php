@@ -42,8 +42,6 @@ class AlgorithmRegister
             while (($values = fgetcsv($fp, 1000, ',')) !== false) {
                 $event = array_combine($keys, $values);
                 $basics = $schema["required"];
-                // FIXME: load from the standard?
-                //$basics = ["id", "name", "organization", "department", "revision_date", "staus", "type", "category", "contact_person_email", "uri"];
                 if (in_array($event["field"], $basics) && $event["attribute"] === "value") {
                     $applications[$event["id"]][$event["field"]] = $event["value"];
                 }
