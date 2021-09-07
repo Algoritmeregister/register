@@ -25,15 +25,6 @@ class AlgorithmRegister
         return json_decode(file_get_contents($this->_uuidServiceUrl))[0];
     }
 
-    private function _transformToIndexed($metadata)
-    {
-        $indexed = [];
-        foreach ($metadata as $field) {
-            $indexed[$field["property"]] = $field;
-        }
-        return $indexed;
-    }
-
     public function __construct($storageDir, $knownMaildomains, $uuidServiceUrl, $metadataStandardUrl)
     {
         $this->_storageDir = $storageDir;
@@ -44,13 +35,15 @@ class AlgorithmRegister
 
     public function listApplications()
     {
+        $schema = json_decode(file_get_contents($this->_metadataStandardUrl), true);
         $applications = [];
         if (($fp = fopen($this->_storageDir . "events.csv", "r")) !== FALSE) {
             $keys = fgetcsv($fp, 1000, ',');
             while (($values = fgetcsv($fp, 1000, ',')) !== false) {
                 $event = array_combine($keys, $values);
+                $basics = $schema["required"];
                 // FIXME: load from the standard?
-                $basics = ["id", "name", "organization", "department", "revision_date", "staus", "type", "category", "contact_person_email", "uri"];
+                //$basics = ["id", "name", "organization", "department", "revision_date", "staus", "type", "category", "contact_person_email", "uri"];
                 if (in_array($event["field"], $basics) && $event["attribute"] === "value") {
                     $applications[$event["id"]][$event["field"]] = $event["value"];
                 }
@@ -86,17 +79,25 @@ class AlgorithmRegister
         if (!in_array($maildomain, $this->_knownMaildomains)) {
             return $response->withStatus(403);
         }
-        $application = $this->_loadApplication();
+
+        $schema = json_decode(file_get_contents($this->_metadataStandardUrl), true);
+        $application = $schema["properties"];
+
+        foreach ($schema["required"] as $field) {
+            $application[$field]["value"] = $data[$field];
+        }
+
         // FIXME load from the standard
         // FIXME what exactly? required fields? basic fields?
-        $application["naam"]["value"] = $data["naam"];
-        $application["organisatie"]["value"] = $data["organisatie"];
-        $application["afdeling"]["value"] = $data["afdeling"];
-        $application["categorie"]["value"] = $data["categorie"];
-        $application["contact"]["value"] = $data["contact"];
-        $application["type"]["value"] = $data["type"];
-        $application["status"]["value"] = $data["status"];
-        $application["herziening"]["value"] = $data["herziening"];
+        //$application["naam"]["value"] = $data["naam"];
+        //$application["organisatie"]["value"] = $data["organisatie"];
+        //$application["afdeling"]["value"] = $data["afdeling"];
+        //$application["categorie"]["value"] = $data["categorie"];
+        //$application["contact"]["value"] = $data["contact"];
+        //$application["type"]["value"] = $data["type"];
+        //$application["status"]["value"] = $data["status"];
+        //$application["herziening"]["value"] = $data["herziening"];
+
         $application["id"]["value"] = $this->_getUuid();
         $application["uri"]["value"] = "{$uri}/{$application["id"]["value"]}";
         $token = $this->_createToken();
@@ -136,11 +137,8 @@ class AlgorithmRegister
         }
     }
 
-    private function _loadApplication($id = NULL)
+    private function _loadApplication($id)
     {
-        if (!$id) {
-            return $this->_transformToIndexed(json_decode(file_get_contents($this->_metadataStandardUrl), true));
-        }
         $application = [];
         if (($fp = fopen($this->_storageDir . "events.csv", "r")) !== FALSE) {
             $keys = fgetcsv($fp, 1000, ',');
@@ -157,7 +155,6 @@ class AlgorithmRegister
             fclose($fp);
         }
         return $application;
-        
     }
 
     private function _storeApplication($id, $application, $action)
