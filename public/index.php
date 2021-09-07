@@ -123,7 +123,7 @@ $app->get('/applications/{id}', function (Request $request, Response $response, 
     $baseUrl = getBaseUrl($request);
     $id = $args['id'];
     $application = $algorithmRegister->readApplication($id);
-    $application["_links"] = [
+    $links["_links"] = [
         "self" => [
             "href" => "{$baseUrl}/applications/{$id}",
             "title" => "Details for algorithmic application {$application["name"]["value"]}"
@@ -149,7 +149,7 @@ $app->get('/applications/{id}', function (Request $request, Response $response, 
         ]
     ];
     $response->getBody()->write(json_encode(
-        $application
+        array_merge($links, $application)
     ));
     return $response->withHeader('Content-Type', 'application/hal+json');
 });
@@ -157,7 +157,7 @@ $app->get('/applications/{id}', function (Request $request, Response $response, 
 $app->post('/applications', function (Request $request, Response $response, $args) use ($algorithmRegister) {
     $baseUrl = getBaseUrl($request);
     $application = $algorithmRegister->createApplication($request->getParsedBody(), $request->getUri());
-    $application["_links"] = [
+    $links["_links"] = [
         "self" => [
             "href" => "{$baseUrl}/applications/{$application["uuid"]["value"]}"
         ],
@@ -178,7 +178,7 @@ $app->post('/applications', function (Request $request, Response $response, $arg
         ]
     ];
     $response->getBody()->write(json_encode(
-        $application
+        array_merge($links, $application)
     ));
     return $response->withHeader('Content-Type', 'application/hal+json');
 });
@@ -187,7 +187,7 @@ $app->put('/applications/{id}', function (Request $request, Response $response, 
     $baseUrl = getBaseUrl($request);
     $token = $request->getQueryParams()["token"];
     $application = $algorithmRegister->updateApplication($args['id'], $request->getParsedBody(), $token);
-    $application["_links"] = [
+    $links["_links"] = [
         "self" => [
             "href" => "{$baseUrl}/applications/{$application["uuid"]}" // FIXME test ["value"]?
         ],
@@ -208,7 +208,7 @@ $app->put('/applications/{id}', function (Request $request, Response $response, 
         ]
     ];
     $response->getBody()->write(json_encode(
-        $application
+        array_merge($links, $application)
     ));
     return $response->withHeader('Content-Type', 'application/hal+json');
 });
