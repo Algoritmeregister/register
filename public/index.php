@@ -86,6 +86,10 @@ $app->get('/applications', function (Request $request, Response $response, $args
             "self" => [
                 "href" => "{$baseUrl}/applications/{$application["id"]}",
                 "title" => "Details for algorithmic application {$application["name"]}"
+            ],
+            "schema" => [
+                "href" => $application["schema"],
+                "title" => "The schema used for this entry"
             ]
         ];
     }
@@ -124,6 +128,10 @@ $app->get('/applications/{id}', function (Request $request, Response $response, 
             "href" => "{$baseUrl}/applications/{$id}",
             "title" => "Details for algorithmic application {$application["name"]["value"]}"
         ],
+        "schema" => [
+            "href" => $application["schema"]["value"],
+            "title" => "The schema used for this entry"
+        ],
         "curies" => [
             [
                 "name" => "ar",
@@ -153,6 +161,10 @@ $app->post('/applications', function (Request $request, Response $response, $arg
         "self" => [
             "href" => "{$baseUrl}/applications/{$application["uuid"]["value"]}"
         ],
+        "schema" => [
+            "href" => $application["schema"]["value"],
+            "title" => "The schema used for this entry"
+        ],
         "curies" => [
             [
                 "name" => "ar",
@@ -177,7 +189,11 @@ $app->put('/applications/{id}', function (Request $request, Response $response, 
     $application = $algorithmRegister->updateApplication($args['id'], $request->getParsedBody(), $token);
     $application["_links"] = [
         "self" => [
-            "href" => "{$baseUrl}/applications/{$application["uuid"]}"
+            "href" => "{$baseUrl}/applications/{$application["uuid"]}" // FIXME ["value"]?
+        ],
+        "schema" => [
+            "href" => $application["schema"]["value"],
+            "title" => "The schema used for this entry"
         ],
         "curies" => [
             [

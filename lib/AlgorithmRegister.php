@@ -22,7 +22,7 @@ class AlgorithmRegister
 
     private function _getUuid()
     {
-        return json_decode(file_get_contents($this->_uuidServiceUrl))[0];
+        return json_decode(file_get_contents($this->_uuidServiceUrl))[0]; // FIXME create locally
     }
 
     public function __construct($storageDir, $knownMaildomains, $uuidServiceUrl, $metadataStandardUrl)
@@ -84,26 +84,23 @@ class AlgorithmRegister
         $application = $schema["properties"];
 
         foreach ($schema["required"] as $field) {
-            $application[$field]["value"] = $data[$field];
+            if (!empty($application[$field]["const"])) {
+                $application[$field]["value"] = $application[$field]["const"];
+            } else {
+                $application[$field]["value"] = $data[$field];
+            }
+            // FIXME: if the data is not there, throw a hissy fit
         }
 
-        // FIXME load from the standard
-        // FIXME what exactly? required fields? basic fields?
-        //$application["naam"]["value"] = $data["naam"];
-        //$application["organisatie"]["value"] = $data["organisatie"];
-        //$application["afdeling"]["value"] = $data["afdeling"];
-        //$application["categorie"]["value"] = $data["categorie"];
-        //$application["contact"]["value"] = $data["contact"];
-        //$application["type"]["value"] = $data["type"];
-        //$application["status"]["value"] = $data["status"];
-        //$application["herziening"]["value"] = $data["herziening"];
-
         $application["id"]["value"] = $this->_getUuid();
-        $application["uri"]["value"] = "{$uri}/{$application["id"]["value"]}";
+        $application["url"]["value"] = "{$uri}/{$application["id"]["value"]}";
+
         $token = $this->_createToken();
         $application["hash"]["value"] = password_hash($token, PASSWORD_DEFAULT);
         $this->_storeApplication($application["id"]["value"], $application, "create");
-        $application["token"]["value"] = $token; // return once but do not store
+
+        $application["token"]["value"] = $token; // do not store! listen very carefully, we'll return this only once
+
         return $application;
     }
 
