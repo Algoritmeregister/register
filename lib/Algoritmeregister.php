@@ -62,6 +62,12 @@ class Algoritmeregister
         return array_values($toepassingen);
     }
 
+    public function dumpEvents()
+    {
+        readfile($this->_storageDir . "events.csv");
+        die;
+    }
+
     public function listEvents($id)
     {
         $events = [];

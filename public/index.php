@@ -80,6 +80,10 @@ $app->get('/', function (Request $request, Response $response, $args) {
     return $response->withHeader('Content-Type', 'application/hal+json');
 });
 
+$app->get('/dump-events', function (Request $request, Response $response, $args) use ($algoritmeregister) {
+    $algoritmeregister->dumpEvents();
+});
+
 $app->get('/toepassingen', function (Request $request, Response $response, $args) use ($algoritmeregister) {
     $baseUrl = getBaseUrl($request);
     $toepassingen = $algoritmeregister->listToepassingen();
