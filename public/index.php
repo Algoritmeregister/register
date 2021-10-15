@@ -84,6 +84,15 @@ $app->get('/dump-events', function (Request $request, Response $response, $args)
     $algoritmeregister->dumpEvents();
 });
 
+$app->get('/dump-toepassingen', function (Request $request, Response $response, $args) use ($algoritmeregister) {
+    $toepassingen = $algoritmeregister->listToepassingen();
+    echo implode(",",array_keys(reset($toepassingen))) . "\n";
+    foreach ($toepassingen as &$toepassing) {
+        echo implode(",",$toepassing) . "\n";
+    }
+    die;
+});
+
 $app->get('/toepassingen', function (Request $request, Response $response, $args) use ($algoritmeregister) {
     $baseUrl = getBaseUrl($request);
     $toepassingen = $algoritmeregister->listToepassingen();
