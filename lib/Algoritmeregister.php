@@ -25,15 +25,6 @@ class Algoritmeregister
         return json_decode(file_get_contents($this->_uuidServiceUrl))[0];
     }
 
-    private function _transformToIndexed($metadata)
-    {
-        $indexed = [];
-        foreach ($metadata as $field) {
-            $indexed[$field["eigenschap"]] = $field;
-        }
-        return $indexed;
-    }
-
     public function __construct($storageDir, $knownMaildomains, $uuidServiceUrl, $metadataStandardUrl)
     {
         $this->_storageDir = $storageDir;
@@ -49,9 +40,20 @@ class Algoritmeregister
             $keys = fgetcsv($fp, 1000, ',');
             while (($values = fgetcsv($fp, 1000, ',')) !== false) {
                 $event = array_combine($keys, $values);
-                $basics = ["id", "naam", "organisatie", "afdeling", "herziening", "status", "type", "categorie", "contact", "uri"];
-                if (in_array($event["field"], $basics) && $event["attribute"] === "waarde") {
-                    $toepassingen[$event["id"]][$event["field"]] = $event["value"];
+                $basics = [
+                    "id",
+                    "name",
+                    "organization",
+                    "department",
+                    "revision_date",
+                    "status",
+                    "type",
+                    "category",
+                    "contact_email",
+                    "uri"
+                ];
+                if (in_array($event["property"], $basics)) {
+                    $toepassingen[$event["id"]][$event["property"]] = $event["value"];
                 }
                 if ($event["action"] === "delete") {
                     unset($toepassingen[$event["id"]]);
@@ -62,10 +64,9 @@ class Algoritmeregister
         return array_values($toepassingen);
     }
 
-    public function dumpEvents()
+    public function getEvents()
     {
-        readfile($this->_storageDir . "events.csv");
-        die;
+        return file_get_contents($this->_storageDir . "events.csv");
     }
 
     public function listEvents($id)
@@ -86,44 +87,47 @@ class Algoritmeregister
 
     public function createToepassing($data, $uri)
     {
-        $contact = $data["contact"];
-        $maildomain = array_pop(explode('@', $contact));
+        $maildomain = array_pop(explode('@', $data["contact_email"]));
         if (!in_array($maildomain, $this->_knownMaildomains)) {
             return $response->withStatus(403);
         }
+
         $toepassing = $this->_loadToepassing();
-        $toepassing["naam"]["waarde"] = $data["naam"];
-        $toepassing["organisatie"]["waarde"] = $data["organisatie"];
-        $toepassing["afdeling"]["waarde"] = $data["afdeling"];
-        $toepassing["categorie"]["waarde"] = $data["categorie"];
-        $toepassing["contact"]["waarde"] = $data["contact"];
-        $toepassing["type"]["waarde"] = $data["type"];
-        $toepassing["status"]["waarde"] = $data["status"];
-        $toepassing["herziening"]["waarde"] = $data["herziening"];
-        $toepassing["id"]["waarde"] = $this->_getUuid();
-        $toepassing["uri"]["waarde"] = "{$uri}/{$toepassing["id"]["waarde"]}";
+
+        $values = [];
+        foreach ($toepassing as $property => $details) {
+            if ($details["category"] === "BASIC INFORMATION" && !empty($data[$property])) {
+                $values[$property] = $data[$property];
+            }
+        }
+        $values["schema"] = $this->_metadataStandardUrl;
+        $values["revision_date"] = $data["revision_date"]; // what to do here
+        $values["id"] = $this->_getUuid(); // auto for meta data
+        $values["uri"] = "{$uri}/{$values["id"]}"; // auto for meta data
+
         $token = $this->_createToken();
-        $toepassing["hash"]["waarde"] = password_hash($token, PASSWORD_DEFAULT);
-        $this->_storeToepassing($toepassing["id"]["waarde"], $toepassing, "create");
-        $toepassing["token"]["waarde"] = $token; // return once but do not store
-        return $toepassing;
+        $values["hash"] = password_hash($token, PASSWORD_DEFAULT);
+        $this->_storeToepassing($values["id"], $values, "create");
+        $values["token"] = $token; // return once but do not store
+        return $values;
     }
 
     public function readToepassing($id)
     {
-        return $this->_loadToepassing($id);
+        $toepassing = $this->_loadToepassing($id);
+        return $toepassing;
     }
 
     public function updateToepassing($id, $values, $token)
     {
         $toepassing = $this->_loadToepassing($id);
-        if (password_verify($token, $toepassing["hash"]["waarde"])) {
+        if (password_verify($token, $toepassing["hash"])) {
             $changes = [];
             foreach ($values as $key => $value) {
-                if ($toepassing[$key]["waarde"] !== $value) {
-                    $changes[$key]["waarde"] = $value;
+                if ($toepassing[$key] !== $value) {
+                    $changes[$key] = $value;
                 }
-                $toepassing[$key]["waarde"] = $value;
+                $toepassing[$key] = $value;
             }
             $this->_storeToepassing($id, $changes, "update"); // optimization: only store changed values
         }
@@ -133,7 +137,7 @@ class Algoritmeregister
     public function deleteToepassing($id, $token)
     {
         $toepassing = $this->_loadToepassing($id);
-        if (password_verify($token, $toepassing["hash"]["waarde"])) {
+        if (password_verify($token, $toepassing["hash"]["value"])) {
             $this->_deleteToepassing($id);
         }
     }
@@ -141,7 +145,8 @@ class Algoritmeregister
     private function _loadToepassing($id = NULL)
     {
         if (!$id) {
-            return $this->_transformToIndexed(json_decode(file_get_contents($this->_metadataStandardUrl), true));
+            $schema = json_decode(file_get_contents($this->_metadataStandardUrl), true);
+            return $schema["properties"];
         }
         $toepassing = [];
         if (($fp = fopen($this->_storageDir . "events.csv", "r")) !== FALSE) {
@@ -154,7 +159,7 @@ class Algoritmeregister
                 if ($event["action"] === "delete") {
                     return null;
                 }
-                $toepassing[$event["field"]][$event["attribute"]] = $event["value"];
+                $toepassing[$event["property"]] = $event["value"];
             }
             fclose($fp);
         }
@@ -165,11 +170,9 @@ class Algoritmeregister
     private function _storeToepassing($id, $toepassing, $action)
     {
         $timestamp = date("Y-m-d H:i:s");
-        foreach ($toepassing as $field => $attributes) {
-            foreach ($attributes as $attribute => $value) {
-                $txt = "\"{$id}\",\"{$action}\",\"{$field}\",\"{$attribute}\",\"{$value}\",\"{$timestamp}\"";
-                file_put_contents($this->_storageDir . "events.csv", $txt.PHP_EOL, FILE_APPEND);
-            }
+        foreach ($toepassing as $property => $value) {
+            $txt = "\"{$id}\",\"{$action}\",\"{$property}\",\"{$value}\",\"{$timestamp}\"";
+            file_put_contents($this->_storageDir . "events.csv", $txt.PHP_EOL, FILE_APPEND);
         }
     }
 

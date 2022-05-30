@@ -50,9 +50,7 @@ $app->add(function ($request, $handler) {
 
 $app->get('/docs/{rel}', function (Request $request, Response $response, $args) {
     $view = Twig::fromRequest($request);
-    return $view->render($response, "{$args["rel"]}.twig", [
-        'title' => 'Uitleg'
-    ]);
+    return $view->render($response, "{$args["rel"]}.twig", []);
     return $response;
 });
 
@@ -61,7 +59,7 @@ $app->get('/', function (Request $request, Response $response, $args) {
     $response->getBody()->write(json_encode([
         "_links" => [
             "self" => [
-                "href" => "/",
+                "href" => "{$baseUrl}/",
                 "title" => "Algoritmeregister"
             ],
             "curies" => [
@@ -72,7 +70,7 @@ $app->get('/', function (Request $request, Response $response, $args) {
                 ]
             ],
             "ar:toepassingen" => [
-                "href" => "/toepassingen",
+                "href" => "{$baseUrl}/toepassingen",
                 "title" => "Alle toepassingen in dit algoritmeregister"
             ]
         ]
@@ -81,16 +79,19 @@ $app->get('/', function (Request $request, Response $response, $args) {
 });
 
 $app->get('/dump-events', function (Request $request, Response $response, $args) use ($algoritmeregister) {
-    $algoritmeregister->dumpEvents();
+    $events = $algoritmeregister->getEvents();
+    $response->getBody()->write($events . "\n");
+    return $response->withHeader('Content-Type', 'text');
 });
 
 $app->get('/dump-toepassingen', function (Request $request, Response $response, $args) use ($algoritmeregister) {
     $toepassingen = $algoritmeregister->listToepassingen();
-    echo implode(",",array_keys(reset($toepassingen))) . "\n";
+    $txt = "\"" . implode("\",\"", array_keys(reset($toepassingen))) . "\"\n";
     foreach ($toepassingen as &$toepassing) {
-        echo implode(",",$toepassing) . "\n";
+        $txt .= "\"" . implode("\",\"", $toepassing) . "\"\n";
     }
-    die;
+    $response->getBody()->write($txt);
+    return $response->withHeader('Content-Type', 'text');
 });
 
 $app->get('/toepassingen', function (Request $request, Response $response, $args) use ($algoritmeregister) {
@@ -99,7 +100,7 @@ $app->get('/toepassingen', function (Request $request, Response $response, $args
     foreach ($toepassingen as &$toepassing) {
         $toepassing["_links"] = [
             "self" => [
-                "href" => "/toepassingen/{$toepassing["id"]}",
+                "href" => "{$baseUrl}/toepassingen/{$toepassing["id"]}",
                 "title" => "Detailpagina voor toepassing {$toepassing["naam"]}"
             ]
         ];
@@ -107,7 +108,7 @@ $app->get('/toepassingen', function (Request $request, Response $response, $args
     $response->getBody()->write(json_encode([
         "_links" => [
             "self" => [
-                "href" => "/toepassingen",
+                "href" => "{$baseUrl}/toepassingen",
                 "title" => "Alle toepassingen in dit algoritmeregister"
             ],
             "curies" => [
@@ -118,7 +119,7 @@ $app->get('/toepassingen', function (Request $request, Response $response, $args
                 ]
             ],
             "ar:algoritmeregister" => [
-                "href" => "/",
+                "href" => "{$baseUrl}/",
                 "title" => "Algoritmeregister"
             ]
         ],
@@ -136,7 +137,7 @@ $app->get('/toepassingen/{id}', function (Request $request, Response $response, 
     $toepassing = $algoritmeregister->readToepassing($id);
     $toepassing["_links"] = [
         "self" => [
-            "href" => "/toepassingen/{$id}",
+            "href" => "{$baseUrl}/toepassingen/{$id}",
             "title" => "Detailpagina voor toepassing {$toepassing["naam"]["waarde"]}"
         ],
         "curies" => [
@@ -147,11 +148,11 @@ $app->get('/toepassingen/{id}', function (Request $request, Response $response, 
             ]
         ],
         "ar:toepassingen" => [
-            "href" => "/toepassingen",
+            "href" => "{$baseUrl}/toepassingen",
             "title" => "Alle toepassingen in dit algoritmeregister"
         ],
         "ar:events" => [
-            "href" => "/events/{$id}",
+            "href" => "{$baseUrl}/events/{$id}",
             "title" => "Alle events voor toepassing {$toepassing["naam"]["waarde"]}"
         ]
     ];
@@ -166,7 +167,7 @@ $app->post('/toepassingen', function (Request $request, Response $response, $arg
     $toepassing = $algoritmeregister->createToepassing($request->getParsedBody(), $request->getUri());
     $toepassing["_links"] = [
         "self" => [
-            "href" => "/toepassingen/{$toepassing["uuid"]["waarde"]}"
+            "href" => "{$baseUrl}/toepassingen/{$toepassing["uuid"]["waarde"]}"
         ],
         "curies" => [
             [
@@ -176,7 +177,7 @@ $app->post('/toepassingen', function (Request $request, Response $response, $arg
             ]
         ],
         "ar:toepassingen" => [
-            "href" => "/toepassingen",
+            "href" => "{$baseUrl}/toepassingen",
             "title" => "Alle toepassingen in dit algoritmeregister"
         ]
     ];
@@ -192,7 +193,7 @@ $app->put('/toepassingen/{id}', function (Request $request, Response $response, 
     $toepassing = $algoritmeregister->updateToepassing($args['id'], $request->getParsedBody(), $token);
     $toepassing["_links"] = [
         "self" => [
-            "href" => "/toepassingen/{$toepassing["uuid"]}"
+            "href" => "{$baseUrl}/toepassingen/{$toepassing["uuid"]}"
         ],
         "curies" => [
             [
@@ -202,7 +203,7 @@ $app->put('/toepassingen/{id}', function (Request $request, Response $response, 
             ]
         ],
         "ar:toepassingen" => [
-            "href" => "/toepassingen",
+            "href" => "{$baseUrl}/toepassingen",
             "title" => "Alle toepassingen in dit algoritmeregister"
         ]
     ];
@@ -225,7 +226,7 @@ $app->get('/events/{id}', function (Request $request, Response $response, $args)
     $response->getBody()->write(json_encode([
         "_links" => [
             "self" => [
-                "href" => "/toepassingen",
+                "href" => "{$baseUrl}/toepassingen",
                 "title" => "Alle toepassingen in dit algoritmeregister"
             ],
             "curies" => [
@@ -236,11 +237,11 @@ $app->get('/events/{id}', function (Request $request, Response $response, $args)
                 ]
             ],
             "ar:algoritmeregister" => [
-                "href" => "/",
+                "href" => "{$baseUrl}/",
                 "title" => "Algoritmeregister"
             ],
             "ar:toepassing" => [
-                "href" => "/toepassingen/{$id}",
+                "href" => "{$baseUrl}/toepassingen/{$id}",
                 "title" => "Detailpagina voor toepassing {$id}"
             ]
         ],
