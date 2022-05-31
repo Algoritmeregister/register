@@ -96,7 +96,7 @@ class Algoritmeregister
 
         $values = [];
         foreach ($toepassing as $property => $details) {
-            if ($details["category"] === "BASIC INFORMATION" && !empty($data[$property])) {
+            if (in_array($details["category"], ["BASIC INFORMATION", "ALGEMENE INFORMATIE"]) && !empty($data[$property])) {
                 $values[$property] = $data[$property];
             }
         }
