@@ -137,7 +137,7 @@ class Algoritmeregister
     public function deleteToepassing($id, $token)
     {
         $toepassing = $this->_loadToepassing($id);
-        if (password_verify($token, $toepassing["hash"]["value"])) {
+        if (password_verify($token, $toepassing["hash"])) {
             $this->_deleteToepassing($id);
         }
     }
@@ -179,7 +179,7 @@ class Algoritmeregister
     private function _deleteToepassing($id)
     {
         $timestamp = date("Y-m-d H:i:s");
-        $txt = "\"{$id}\",\"delete\", , , ,\"{$timestamp}\"";
+        $txt = "\"{$id}\",\"delete\",,,\"{$timestamp}\"";
         file_put_contents($this->_storageDir . "events.csv", $txt.PHP_EOL, FILE_APPEND);
     }
 }
