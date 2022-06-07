@@ -72,6 +72,10 @@ $app->get('/', function (Request $request, Response $response, $args) {
             "ar:toepassingen" => [
                 "href" => "{$baseUrl}/toepassingen",
                 "title" => "Alle toepassingen in dit algoritmeregister"
+            ],
+            "ar:exporteren" => [
+                "href" => "{$baseUrl}/exporteren",
+                "title" => "CSV exporteren van alle toepassingen in dit algoritmeregister"
             ]
         ]
     ]));
@@ -84,14 +88,15 @@ $app->get('/dump-events', function (Request $request, Response $response, $args)
     return $response->withHeader('Content-Type', 'text');
 });
 
-$app->get('/dump-toepassingen', function (Request $request, Response $response, $args) use ($algoritmeregister) {
+$app->get('/exporteren', function (Request $request, Response $response, $args) use ($algoritmeregister) {
     $toepassingen = $algoritmeregister->listToepassingen();
-    $txt = "\"" . implode("\",\"", array_keys(reset($toepassingen))) . "\"\n";
+    $txt = "\"" . implode("\";\"", array_keys(reset($toepassingen))) . "\"\n";
     foreach ($toepassingen as &$toepassing) {
         $txt .= "\"" . implode("\";\"", $toepassing) . "\"\n";
     }
     $response->getBody()->write($txt);
-    return $response->withHeader('Content-Type', 'text/csv');
+    return $response->withHeader('Content-Type', 'text/csv')
+                    ->withHeader('Content-Disposition', 'attachment;filename=algoritmeregister.csv');
 });
 
 $app->get('/toepassingen', function (Request $request, Response $response, $args) use ($algoritmeregister) {
