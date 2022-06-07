@@ -88,10 +88,10 @@ $app->get('/dump-toepassingen', function (Request $request, Response $response, 
     $toepassingen = $algoritmeregister->listToepassingen();
     $txt = "\"" . implode("\",\"", array_keys(reset($toepassingen))) . "\"\n";
     foreach ($toepassingen as &$toepassing) {
-        $txt .= "\"" . implode("\",\"", $toepassing) . "\"\n";
+        $txt .= "\"" . implode("\";\"", $toepassing) . "\"\n";
     }
     $response->getBody()->write($txt);
-    return $response->withHeader('Content-Type', 'text');
+    return $response->withHeader('Content-Type', 'text/csv');
 });
 
 $app->get('/toepassingen', function (Request $request, Response $response, $args) use ($algoritmeregister) {
