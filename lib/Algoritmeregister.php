@@ -42,6 +42,7 @@ class Algoritmeregister
                 $event = array_combine($keys, $values);
                 $basics = [
                     "id",
+                    "schema",
                     "name",
                     "organization",
                     "department",
@@ -52,6 +53,9 @@ class Algoritmeregister
                     "contact_email",
                     "uri"
                 ];
+                if (!$toepassingen[$event["id"]]) {
+                    $toepassingen[$event["id"]];
+                }
                 if (in_array($event["property"], $basics)) {
                     $toepassingen[$event["id"]][$event["property"]] = $event["value"];
                 }
