@@ -32,7 +32,8 @@ $algoritmeregister = new Algoritmeregister(
     $config["storage-directory"],
     $config["known-maildomains"],
     $config["uuid-service-url"],
-    $config["metadata-standard-url"]
+    $config["metadata-standard-url"],
+    $config["schemas"]
 );
 
 $app->options('/{routes:.+}', function ($request, $response, $args) {

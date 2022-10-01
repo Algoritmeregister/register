@@ -3,8 +3,18 @@
 $config = [
     'storage-directory' => '',
     'known-maildomains' => [
-        'Organization Name' => 'maildomain.extension'
+        'Organization Name' => 'maildomain.ext'
     ],
     'uuid-service-url' => "https://www.uuidtools.com/api/generate/v1",
-    'metadata-standard-url' => "https://algoritmeregister.github.io/algoritmeregister-metadata-standaard/algoritmeregister-metadata-standaard.json"
+    'metadata-standard-url' => "https://algoritmeregister.github.io/algoritmeregister-metadata-standaard/algoritmeregister-metadata-standaard.json",
+    'schemas' => [
+        #'Algorithm Register v0.2' => 'https://standaard.algoritmeregister.org/schemas/registration-v0.2.schema.json',
+        #'Algoritmeregister v0.2' => 'https://standaard.algoritmeregister.org/schemas/registration-v0.2.nl.schema.json',
+        #'Algorithm Register v0.3' => 'https://standaard.algoritmeregister.org/schemas/registration-v0.3.schema.json',
+        #'Algoritmeregister v0.3' => 'https://standaard.algoritmeregister.org/schemas/registration-v0.3.nl.schema.json',
+        #'Algorithm Register UK' => 'https://standaard.algoritmeregister.org/schemas/registration-uk.schema.json',
+        #'DPIA' => 'https://standaard.algoritmeregister.org/schemas/dpia.schema.json',
+        #'FRAIA' => 'https://standaard.algoritmeregister.org/schemas/fraia.schema.json',
+        #'IAMA' => 'https://standaard.algoritmeregister.org/schemas/iama.schema.json',
+    ],
 ];

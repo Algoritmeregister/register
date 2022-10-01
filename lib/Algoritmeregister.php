@@ -9,6 +9,7 @@ class Algoritmeregister
     private $_knownMaildomains;
     private $_uuidServiceUrl;
     private $_metadataStandardUrl;
+    private $_schemas;
 
     private function _createToken()
     {
@@ -25,12 +26,13 @@ class Algoritmeregister
         return json_decode(file_get_contents($this->_uuidServiceUrl))[0];
     }
 
-    public function __construct($storageDir, $knownMaildomains, $uuidServiceUrl, $metadataStandardUrl)
+    public function __construct($storageDir, $knownMaildomains, $uuidServiceUrl, $metadataStandardUrl, $schemas)
     {
         $this->_storageDir = $storageDir;
         $this->_knownMaildomains = $knownMaildomains;
         $this->_uuidServiceUrl = $uuidServiceUrl;
         $this->_metadataStandardUrl = $metadataStandardUrl;
+        $this->_schemas = $schemas;
     }
 
     public function listToepassingen()
